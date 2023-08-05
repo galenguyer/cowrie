@@ -81,13 +81,11 @@ class Output(cowrie.core.output.Output):
         if entry["eventid"] == "cowrie.session.connect":
             d = self.geoip(entry["src_ip"])
             if d is not None:
-                d.addCallback(processConnect)
-                d.addErrback(cbError)
+                processConnect(d)
         elif entry["eventid"] == "cowrie.direct-tcpip.request":
             d = self.geoip(entry["dst_ip"])
             if d is not None:
-                d.addCallback(processForward)
-                d.addErrback(cbError)
+                processForward(d)
 
     @lru_cache(maxsize=1000)
     def geoip(self, addr):
