@@ -47,12 +47,7 @@ class Output(cowrie.core.output.Output):
                 session=entry["session"],
                 format="geoip: GeoIP record for IP %(src_ip)s found",
                 src_ip=entry["src_ip"],
-                geoip={
-                    "country": {
-                        "name": result.country.name,
-                        "iso_code": result.country.iso_code
-                    }
-                }
+                geoip=result
             )
 
         def processForward(result):
@@ -66,12 +61,7 @@ class Output(cowrie.core.output.Output):
                 session=entry["session"],
                 format="geoip: GeoIP record for IP %(dst_ip)s found",
                 dst_ip=entry["dst_ip"],
-                geoip={
-                    "country": {
-                        "name": result.country.name,
-                        "iso_code": result.country.iso_code
-                    }
-                }
+                geoip=result
             )
 
         def cbError(failure):
@@ -95,4 +85,19 @@ class Output(cowrie.core.output.Output):
         Arguments:
             addr -- IPv4 Address
         """
-        return self.city_db.city(ip_address=addr)
+        city_result = self.city_db.city(ip_address=addr)
+        final_result = {
+            "country": {
+                "name": city_result.country.name,
+                "iso_code": city_result.country.iso_code
+            }
+        }
+        if city_result.subdivisions.most_specific.name:
+            final_result["region"] = {
+                "name": city_result.subdivisions.most_specific.name,
+                "iso_code": city_result.subdivisions.most_specific.iso_code
+            }
+        if city_result.city.name:
+            final_result["city"] = city_result.city.name
+
+        return final_result
