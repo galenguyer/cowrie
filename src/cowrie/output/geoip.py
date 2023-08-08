@@ -3,8 +3,6 @@ from __future__ import annotations
 from functools import lru_cache
 import geoip2.database
 
-from twisted.internet import defer
-from twisted.names import client, error
 from twisted.python import log
 
 import cowrie.core.output
@@ -15,8 +13,6 @@ class Output(cowrie.core.output.Output):
     """
     Output plugin used for GeoIP lookup
     """
-
-    timeout: list[int] = [3]
 
     def start(self):
         """
@@ -64,10 +60,6 @@ class Output(cowrie.core.output.Output):
                 geoip=result
             )
 
-        def cbError(failure):
-            log.msg("geoip: Error in GeoIP lookup")
-            failure.printTraceback()
-
         if entry["eventid"] == "cowrie.session.connect":
             d = self.geoip(entry["src_ip"])
             if d is not None:
@@ -90,6 +82,10 @@ class Output(cowrie.core.output.Output):
             "country": {
                 "name": city_result.country.name,
                 "iso_code": city_result.country.iso_code
+            },
+            "location": {
+                "latitude": city_result.location.latitude,
+                "longitude": city_result.location.longitude,
             }
         }
         if city_result.subdivisions.most_specific.name:
